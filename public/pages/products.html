@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk - inPOS</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-logo">in<span>POS</span></div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/products" class="nav-item active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    <span>Produk</span>
+                </a>
+                <a href="/pos" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+                    <span>Kasir (POS)</span>
+                </a>
+                <a href="/inventory" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                    <span>Inventaris</span>
+                </a>
+                <a href="/reports" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <span>Laporan</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div class="user-details">
+                        <div class="user-name" style="color:white;font-weight:500;">Admin</div>
+                        <small class="user-role">Administrator</small>
+                    </div>
+                </div>
+                <button onclick="logout()" class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:white;width:100%;justify-content:center;">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 class="page-title">Data Produk</h1>
+                <div class="top-bar-actions">
+                    <button onclick="openProductModal()" class="btn btn-primary btn-sm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Tambah Produk
+                    </button>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Daftar Produk</span>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Cari produk..." onkeyup="filterProducts()">
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Produk</th>
+                                    <th>Kategori</th>
+                                    <th>Harga</th>
+                                    <th>Stok</th>
+                                    <th>Min. Stok</th>
+                                    <th>Unit</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productTable">
+                                <tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Produk</h3>
+                <button class="modal-close" onclick="closeProductModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    <div class="form-group">
+                        <label>Nama Produk *</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select id="productCategory"></select>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label>Harga *</label>
+                            <input type="number" id="productPrice" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <input type="text" id="productUnit" placeholder="pcs, porsi, dll">
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group">
+                            <label>Stok</label>
+                            <input type="number" id="productStock" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Min. Stok</label>
+                            <input type="number" id="productMinStock" min="0" value="5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Barcode</label>
+                        <input type="text" id="productBarcode" placeholder="Opsional">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" onclick="closeProductModal()">Batal</button>
+                <button class="btn btn-primary btn-sm" onclick="saveProduct()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal" style="max-width:400px">
+            <div class="modal-header">
+                <h3>Hapus Produk</h3>
+                <button class="modal-close" onclick="document.getElementById('deleteModal').classList.remove('show')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Yakin ingin menghapus produk <strong id="deleteProductName"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('deleteModal').classList.remove('show')">Batal</button>
+                <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/app.js"></script>
+    <script>
+        let products = [];
+        let categories = [];
+        let deleteProductId = null;
+
+        async function loadProducts() {
+            const authorized = await protectPage();
+            if (!authorized) return;
+
+            try {
+                const [prodRes, catRes] = await Promise.all([
+                    fetch('/api/products'),
+                    fetch('/api/categories')
+                ]);
+                products = await prodRes.json();
+                categories = await catRes.json();
+                renderProducts(products);
+                loadCategoryOptions();
+            } catch (error) {
+                showToast('Gagal memuat data produk', 'error');
+            }
+        }
+
+        function loadCategoryOptions() {
+            const select = document.getElementById('productCategory');
+            select.innerHTML = '<option value="">-- Pilih Kategori --</option>' +
+                categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        function renderProducts(data) {
+            const tbody = document.getElementById('productTable');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted" style="padding:2rem;">Tidak ada produk</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map((p, i) => {
+                const stockStatus = p.stock <= p.min_stock ? 'badge-danger' : 'badge-success';
+                return `<tr>
+                    <td>${i + 1}</td>
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.category_name || '-'}</td>
+                    <td>${formatCurrency(p.price)}</td>
+                    <td><span class="badge ${stockStatus}">${p.stock} ${p.unit || 'pcs'}</span></td>
+                    <td>${p.min_stock}</td>
+                    <td>${p.unit || 'pcs'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="editProduct(${p.id})" title="Edit">&#9998;</button>
+                        <button class="btn btn-sm btn-danger" onclick="confirmDelete(${p.id}, '${p.name.replace(/'/g, "\\'")}')" title="Hapus">&#128465;</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterProducts() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p =>
+                p.name.toLowerCase().includes(q) ||
+                (p.category_name && p.category_name.toLowerCase().includes(q))
+            );
+            renderProducts(filtered);
+        }
+
+        function openProductModal(id = null) {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('modalTitle').textContent = 'Tambah Produk';
+            document.getElementById('productModal').classList.add('show');
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('show');
+        }
+
+        function closeModalOnOverlay(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('show');
+            }
+        }
+
+        async function editProduct(id) {
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('productId').value = p.id;
+            document.getElementById('productName').value = p.name;
+            document.getElementById('productCategory').value = p.category_id || '';
+            document.getElementById('productPrice').value = p.price;
+            document.getElementById('productUnit').value = p.unit || '';
+            document.getElementById('productStock').value = p.stock;
+            document.getElementById('productMinStock').value = p.min_stock;
+            document.getElementById('productBarcode').value = p.barcode || '';
+            document.getElementById('modalTitle').textContent = 'Edit Produk';
+            document.getElementById('productModal').classList.add('show');
+        }
+
+        async function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const data = {
+                name: document.getElementById('productName').value,
+                category_id: document.getElementById('productCategory').value || null,
+                price: parseInt(document.getElementById('productPrice').value),
+                unit: document.getElementById('productUnit').value || 'pcs',
+                stock: parseInt(document.getElementById('productStock').value) || 0,
+                min_stock: parseInt(document.getElementById('productMinStock').value) || 5,
+                barcode: document.getElementById('productBarcode').value || null
+            };
+
+            if (!data.name || !data.price) {
+                showToast('Nama dan harga wajib diisi', 'error');
+                return;
+            }
+
+            try {
+                const url = id ? `/api/products/${id}` : '/api/products';
+                const method = id ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (res.ok) {
+                    showToast(id ? 'Produk berhasil diperbarui' : 'Produk berhasil ditambahkan');
+                    closeProductModal();
+                    loadProducts();
+                } else {
+                    const err = await res.json();
+                    showToast(err.error || 'Gagal menyimpan', 'error');
+                }
+            } catch (e) {
+                showToast('Gagal menyimpan produk', 'error');
+            }
+        }
+
+        function confirmDelete(id, name) {
+            deleteProductId = id;
+            document.getElementById('deleteProductName').textContent = name;
+            document.getElementById('deleteModal').classList.add('show');
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteProduct(id);
+        }
+
+        async function deleteProduct(id) {
+            try {
+                const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Produk berhasil dihapus');
+                    document.getElementById('deleteModal').classList.remove('show');
+                    loadProducts();
+                } else {
+                    showToast('Gagal menghapus produk', 'error');
+                }
+            } catch (e) {
+                showToast('Gagal menghapus produk', 'error');
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
