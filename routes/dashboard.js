@@ -24,7 +24,7 @@ module.exports = (db) => {
             const [recentTrans] = await db.query(`
                 SELECT t.*, u.full_name as kasir_name
                 FROM transactions t
-                JOIN users u ON t.user_id = u.id
+                JOIN users u ON t.users_id = u.users_id
                 ORDER BY t.transaction_date DESC
                 LIMIT 5
             `);

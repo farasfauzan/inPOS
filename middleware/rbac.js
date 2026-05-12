@@ -14,7 +14,7 @@ function hasAccess(role, page) {
 // Middleware for API routes
 function requireRole(role) {
     return (req, res, next) => {
-        if (!req.session.userId) {
+        if (!req.session.users_id) {
             return res.status(401).json({ error: 'Silakan login terlebih dahulu' });
         }
         if (req.session.role !== role) {
@@ -26,7 +26,7 @@ function requireRole(role) {
 
 // Middleware for pages - redirect to pos if kasir
 function restrictPage(req, res, next) {
-    if (!req.session.userId) {
+    if (!req.session.users_id) {
         return res.redirect('/login');
     }
     const page = req.path.replace('/', '');

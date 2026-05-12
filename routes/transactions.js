@@ -8,7 +8,7 @@ module.exports = (db) => {
             const [transactions] = await db.query(`
                 SELECT t.*, u.full_name as kasir_name
                 FROM transactions t
-                JOIN users u ON t.user_id = u.id
+                JOIN users u ON t.users_id = u.users_id
                 ORDER BY t.transaction_date DESC
             `);
             res.json(transactions);
@@ -22,7 +22,7 @@ module.exports = (db) => {
     router.get('/:id', async (req, res) => {
         try {
             const [transactions] = await db.query(
-                'SELECT t.*, u.full_name as kasir_name FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.id = ?',
+                'SELECT t.*, u.full_name as kasir_name FROM transactions t JOIN users u ON t.users_id = u.users_id WHERE t.transactions_id = ?',
                 [req.params.id]
             );
             if (transactions.length === 0) {
@@ -32,8 +32,8 @@ module.exports = (db) => {
             const [details] = await db.query(`
                 SELECT td.*, p.name as product_name
                 FROM transaction_details td
-                JOIN products p ON td.product_id = p.id
-                WHERE td.transaction_id = ?
+                JOIN products p ON td.products_id = p.products_id
+                WHERE td.transactions_id = ?
             `, [req.params.id]);
 
             res.json({ ...transactions[0], details });
@@ -50,7 +50,7 @@ module.exports = (db) => {
             await connection.beginTransaction();
 
             const { items, payment_method, amount_paid } = req.body;
-            const userId = req.session.userId;
+            const users_id = req.session.users_id;
 
             if (!items || items.length === 0) {
                 await connection.rollback();
@@ -63,13 +63,13 @@ module.exports = (db) => {
             // Validasi stok setiap item
             for (const item of items) {
                 const [products] = await connection.query(
-                    'SELECT * FROM products WHERE id = ? FOR UPDATE',
-                    [item.product_id]
+                    'SELECT * FROM products WHERE products_id = ? FOR UPDATE',
+                    [item.products_id]
                 );
 
                 if (products.length === 0) {
                     await connection.rollback();
-                    return res.status(404).json({ error: `Produk ID ${item.product_id} tidak ditemukan` });
+                    return res.status(404).json({ error: `Produk ID ${item.products_id} tidak ditemukan` });
                 }
 
                 const product = products[0];
@@ -83,7 +83,7 @@ module.exports = (db) => {
                 const subtotal = product.price * item.quantity;
                 totalAmount += subtotal;
                 processedItems.push({
-                    product_id: item.product_id,
+                    products_id: item.products_id,
                     quantity: item.quantity,
                     price: product.price,
                     subtotal: subtotal
@@ -100,29 +100,29 @@ module.exports = (db) => {
 
             // Insert transaksi
             const [transResult] = await connection.query(
-                `INSERT INTO transactions (user_id, total_amount, payment_method, amount_paid, change_amount)
+                `INSERT INTO transactions (users_id, total_amount, payment_method, amount_paid, change_amount)
                  VALUES (?, ?, ?, ?, ?)`,
-                [userId, totalAmount, payment_method || 'cash', paid, change]
+                [users_id, totalAmount, payment_method || 'cash', paid, change]
             );
-            const transactionId = transResult.insertId;
+            const transactions_id = transResult.insertId;
 
             // Insert detail & update stok
             for (const item of processedItems) {
                 await connection.query(
-                    'INSERT INTO transaction_details (transaction_id, product_id, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)',
-                    [transactionId, item.product_id, item.quantity, item.price, item.subtotal]
+                    'INSERT INTO transaction_details (transactions_id, products_id, quantity, price, subtotal) VALUES (?, ?, ?, ?, ?)',
+                    [transactions_id, item.products_id, item.quantity, item.price, item.subtotal]
                 );
 
-                const [product] = await connection.query('SELECT stock FROM products WHERE id = ?', [item.product_id]);
+                const [product] = await connection.query('SELECT stock FROM products WHERE products_id = ?', [item.products_id]);
                 const stockBefore = product[0].stock;
                 const stockAfter = stockBefore - item.quantity;
 
-                await connection.query('UPDATE products SET stock = ? WHERE id = ?', [stockAfter, item.product_id]);
+                await connection.query('UPDATE products SET stock = ? WHERE products_id = ?', [stockAfter, item.products_id]);
 
                 await connection.query(
-                    `INSERT INTO stock_history (product_id, change_type, quantity_change, stock_before, stock_after, reference_id)
+                    `INSERT INTO stock_history (products_id, change_type, quantity_change, stock_before, stock_after, reference_id)
                      VALUES (?, 'sale', ?, ?, ?, ?)`,
-                    [item.product_id, -item.quantity, stockBefore, stockAfter, transactionId]
+                    [item.products_id, -item.quantity, stockBefore, stockAfter, transactions_id]
                 );
             }
 
@@ -131,16 +131,16 @@ module.exports = (db) => {
             const [transaction] = await connection.query(`
                 SELECT t.*, u.full_name as kasir_name
                 FROM transactions t
-                JOIN users u ON t.user_id = u.id
-                WHERE t.id = ?
-            `, [transactionId]);
+                JOIN users u ON t.users_id = u.users_id
+                WHERE t.transactions_id = ?
+            `, [transactions_id]);
 
             const [details] = await connection.query(`
                 SELECT td.*, p.name as product_name
                 FROM transaction_details td
-                JOIN products p ON td.product_id = p.id
-                WHERE td.transaction_id = ?
-            `, [transactionId]);
+                JOIN products p ON td.products_id = p.products_id
+                WHERE td.transactions_id = ?
+            `, [transactions_id]);
 
             res.status(201).json({
                 message: 'Transaksi berhasil',

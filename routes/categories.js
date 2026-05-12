@@ -24,7 +24,7 @@ module.exports = (db) => {
                 'INSERT INTO categories (name, description) VALUES (?, ?)',
                 [name, description || null]
             );
-            const [newCat] = await db.query('SELECT * FROM categories WHERE id = ?', [result.insertId]);
+            const [newCat] = await db.query('SELECT * FROM categories WHERE categories_id = ?', [result.insertId]);
             res.status(201).json({ message: 'Kategori berhasil ditambahkan', category: newCat[0] });
         } catch (error) {
             console.error('Error adding category:', error);
@@ -35,7 +35,7 @@ module.exports = (db) => {
     // DELETE /api/categories/:id
     router.delete('/:id', async (req, res) => {
         try {
-            await db.query('DELETE FROM categories WHERE id = ?', [req.params.id]);
+            await db.query('DELETE FROM categories WHERE categories_id = ?', [req.params.id]);
             res.json({ message: 'Kategori berhasil dihapus' });
         } catch (error) {
             console.error('Error deleting category:', error);

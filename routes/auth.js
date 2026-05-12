@@ -13,7 +13,7 @@ module.exports = (db) => {
             }
 
             const [users] = await db.query(
-                'SELECT id, username, password, full_name, role FROM users WHERE username = ?',
+                'SELECT users_id, username, password, full_name, role FROM users WHERE username = ?',
                 [username]
             );
 
@@ -29,7 +29,7 @@ module.exports = (db) => {
             }
 
             // Set session
-            req.session.userId = user.id;
+            req.session.users_id = user.users_id;
             req.session.username = user.username;
             req.session.fullName = user.full_name;
             req.session.role = user.role;
@@ -37,7 +37,7 @@ module.exports = (db) => {
             return res.json({
                 message: 'Login berhasil',
                 user: {
-                    id: user.id,
+                    users_id: user.users_id,
                     username: user.username,
                     fullName: user.full_name,
                     role: user.role
@@ -61,11 +61,11 @@ module.exports = (db) => {
 
     // GET /api/auth/session - Cek status login
     router.get('/session', (req, res) => {
-        if (req.session.userId) {
+        if (req.session.users_id) {
             return res.json({
                 loggedIn: true,
                 user: {
-                    id: req.session.userId,
+                    users_id: req.session.users_id,
                     username: req.session.username,
                     fullName: req.session.fullName,
                     role: req.session.role

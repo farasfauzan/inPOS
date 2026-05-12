@@ -11,7 +11,7 @@ module.exports = (db) => {
                      WHEN p.stock <= p.min_stock * 2 THEN 'warning'
                      ELSE 'normal' END as stock_status
                 FROM products p
-                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN categories c ON p.categories_id = c.categories_id
                 ORDER BY p.stock ASC
             `);
             res.json(products);
@@ -27,7 +27,7 @@ module.exports = (db) => {
             const [products] = await db.query(`
                 SELECT p.*, c.name as category_name
                 FROM products p
-                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN categories c ON p.categories_id = c.categories_id
                 WHERE p.stock <= p.min_stock
                 ORDER BY p.stock ASC
             `);
@@ -50,7 +50,7 @@ module.exports = (db) => {
                 return res.status(400).json({ error: 'Jumlah harus lebih dari 0' });
             }
 
-            const [products] = await connection.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
+            const [products] = await connection.query('SELECT * FROM products WHERE products_id = ?', [req.params.id]);
             if (products.length === 0) {
                 await connection.rollback();
                 return res.status(404).json({ error: 'Produk tidak ditemukan' });
@@ -60,17 +60,17 @@ module.exports = (db) => {
             const stockBefore = product.stock;
             const stockAfter = stockBefore + parseInt(quantity);
 
-            await connection.query('UPDATE products SET stock = ? WHERE id = ?', [stockAfter, req.params.id]);
+            await connection.query('UPDATE products SET stock = ? WHERE products_id = ?', [stockAfter, req.params.id]);
 
             await connection.query(
-                `INSERT INTO stock_history (product_id, change_type, quantity_change, stock_before, stock_after, note)
+                `INSERT INTO stock_history (products_id, change_type, quantity_change, stock_before, stock_after, note)
                  VALUES (?, 'restock', ?, ?, ?, ?)`,
                 [req.params.id, parseInt(quantity), stockBefore, stockAfter, note || 'Restock']
             );
 
             await connection.commit();
 
-            const [updated] = await connection.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
+            const [updated] = await connection.query('SELECT * FROM products WHERE products_id = ?', [req.params.id]);
             res.json({ message: 'Stok berhasil ditambahkan', product: updated[0] });
         } catch (error) {
             await connection.rollback();
@@ -86,7 +86,7 @@ module.exports = (db) => {
         try {
             const [history] = await db.query(`
                 SELECT * FROM stock_history
-                WHERE product_id = ?
+                WHERE products_id = ?
                 ORDER BY created_at DESC
                 LIMIT 50
             `, [req.params.id]);

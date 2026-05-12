@@ -7,7 +7,7 @@
 
 // Table: users
 Table users as USERS {
-  id int [pk, increment]
+  users_id int [pk, increment]
   username varchar(50) [unique, not null]
   password varchar(255) [not null]
   full_name varchar(100) [not null]
@@ -18,7 +18,7 @@ Table users as USERS {
 
 // Table: categories
 Table categories as CATEGORIES {
-  id int [pk, increment]
+  categories_id int [pk, increment]
   name varchar(100) [not null]
   description text
   created_at timestamp [not null, default: 'current_timestamp']
@@ -26,9 +26,9 @@ Table categories as CATEGORIES {
 
 // Table: products
 Table products as PRODUCTS {
-  id int [pk, increment]
+  products_id int [pk, increment]
   name varchar(100) [not null]
-  category_id int [ref: > CATEGORIES.id]
+  categories_id int [ref: > CATEGORIES.categories_id]
   price decimal(12,0) [not null]
   stock int [not null, default: 0]
   min_stock int [not null, default: 5]
@@ -41,8 +41,8 @@ Table products as PRODUCTS {
 
 // Table: transactions
 Table transactions as TRANSACTIONS {
-  id int [pk, increment]
-  user_id int [not null, ref: > USERS.id]
+  transactions_id int [pk, increment]
+  users_id int [not null, ref: > USERS.users_id]
   total_amount decimal(14,0) [not null, default: 0]
   payment_method enum('cash', 'debit', 'qris') [default: 'cash']
   amount_paid decimal(14,0) [not null, default: 0]
@@ -52,9 +52,9 @@ Table transactions as TRANSACTIONS {
 
 // Table: transaction_details
 Table transaction_details as TRANSACTION_DETAILS {
-  id int [pk, increment]
-  transaction_id int [not null, ref: > TRANSACTIONS.id]
-  product_id int [not null, ref: > PRODUCTS.id]
+  transaction_details_id int [pk, increment]
+  transactions_id int [not null, ref: > TRANSACTIONS.transactions_id]
+  products_id int [not null, ref: > PRODUCTS.products_id]
   quantity int [not null]
   price decimal(12,0) [not null]
   subtotal decimal(14,0) [not null]
@@ -62,8 +62,8 @@ Table transaction_details as TRANSACTION_DETAILS {
 
 // Table: stock_history
 Table stock_history as STOCK_HISTORY {
-  id int [pk, increment]
-  product_id int [not null, ref: > PRODUCTS.id]
+  stock_history_id int [pk, increment]
+  products_id int [not null, ref: > PRODUCTS.products_id]
   change_type enum('sale', 'restock', 'adjustment') [not null]
   quantity_change int [not null]
   stock_before int [not null]
@@ -96,11 +96,11 @@ Table stock_history as STOCK_HISTORY {
 // ============================================
 // INDEXES
 // ============================================
-CREATE INDEX idx_products_category ON PRODUCTS (category_id);
+CREATE INDEX idx_products_category ON PRODUCTS (categories_id);
 CREATE INDEX idx_products_name ON PRODUCTS (name);
-CREATE INDEX idx_transactions_user ON TRANSACTIONS (user_id);
+CREATE INDEX idx_transactions_user ON TRANSACTIONS (users_id);
 CREATE INDEX idx_transactions_date ON TRANSACTIONS (transaction_date);
-CREATE INDEX idx_details_transaction ON TRANSACTION_DETAILS (transaction_id);
-CREATE INDEX idx_details_product ON TRANSACTION_DETAILS (product_id);
-CREATE INDEX idx_history_product ON STOCK_HISTORY (product_id);
+CREATE INDEX idx_details_transaction ON TRANSACTION_DETAILS (transactions_id);
+CREATE INDEX idx_details_product ON TRANSACTION_DETAILS (products_id);
+CREATE INDEX idx_history_product ON STOCK_HISTORY (products_id);
 CREATE INDEX idx_history_date ON STOCK_HISTORY (created_at);

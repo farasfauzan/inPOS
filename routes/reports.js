@@ -8,9 +8,9 @@ module.exports = (db) => {
             const { start_date, end_date } = req.query;
             let query = `
                 SELECT t.*, u.full_name as kasir_name,
-                (SELECT COUNT(*) FROM transaction_details WHERE transaction_id = t.id) as total_items
+                (SELECT COUNT(*) FROM transaction_details WHERE transactions_id = t.transactions_id) as total_items
                 FROM transactions t
-                JOIN users u ON t.user_id = u.id
+                JOIN users u ON t.users_id = u.users_id
                 WHERE 1=1
             `;
             const params = [];
@@ -72,7 +72,7 @@ module.exports = (db) => {
                      WHEN p.stock <= p.min_stock * 2 THEN 'warning'
                      ELSE 'normal' END as stock_status
                 FROM products p
-                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN categories c ON p.categories_id = c.categories_id
                 ORDER BY p.stock ASC
             `);
 
@@ -94,9 +94,9 @@ module.exports = (db) => {
                        SUM(td.quantity) as total_sold,
                        SUM(td.subtotal) as total_revenue
                 FROM transaction_details td
-                JOIN products p ON td.product_id = p.id
-                LEFT JOIN categories c ON p.category_id = c.id
-                JOIN transactions t ON td.transaction_id = t.id
+                JOIN products p ON td.products_id = p.products_id
+                LEFT JOIN categories c ON p.categories_id = c.categories_id
+                JOIN transactions t ON td.transactions_id = t.transactions_id
                 WHERE 1=1
             `;
             const params = [];
@@ -110,7 +110,7 @@ module.exports = (db) => {
                 params.push(end_date);
             }
 
-            query += ' GROUP BY p.id ORDER BY total_sold DESC LIMIT 10';
+            query += ' GROUP BY p.products_id ORDER BY total_sold DESC LIMIT 10';
 
             const [products] = await db.query(query, params);
             res.json(products);
