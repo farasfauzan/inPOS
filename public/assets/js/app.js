@@ -62,7 +62,14 @@ async function getSession() {
 // Logout
 async function logout() {
     try {
-        await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        await fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        });
         window.location.href = '/login';
     } catch (e) {
         window.location.href = '/login';
